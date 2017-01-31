@@ -1,40 +1,36 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using BDAC.Classes;
 
 namespace BDAC
 {
-    public partial class Main_Frm : Form
+    public partial class MainFrm : Form
     {
-        public Functions Functions = null;
-        public int closeTime = 0;
-        public int shutdownPC = 0;
+        public Functions Functions;
+        public int CloseTime;
+        public int ShutdownPc;
 
-        public Main_Frm()
+        public MainFrm()
         {
             Functions = new Functions(this);
             InitializeComponent();
+            nShutdownDC.Enabled = false;
+            nShutdownDC.Visible = false;
         }
 
         private void Main_Frm_Resize(object sender, EventArgs e)
         {
-            //Send BDAC to tray when it
-            //minimizes if the tray option is checked
-            if (nMinBox.Checked)
+            //Send BDAC to tray when it minimizes if the tray option is checked
+            if (nMinBox.Checked && WindowState == FormWindowState.Minimized)
             {
-                if (WindowState == FormWindowState.Minimized)
-                {
-                    Hide();
-                    traySystem.Visible = true;
-                }
+                Hide();
+                traySystem.Visible = true;
             }
         }
 
         private void traySystem_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            //Reveal BDAC when double
-            //clicking the tray system
+            //Reveal BDAC when double clicking the tray system
             Show();
             WindowState = FormWindowState.Normal;
             traySystem.Visible = false;
@@ -51,24 +47,24 @@ namespace BDAC
 
         private void startCheckBtn_Click(object sender, EventArgs e)
         {
-            if (!Functions.autoClose)
+            if (!Functions.AutoClose)
             {
                 if (!checkGameTimer.Enabled)
                 {
-                    startCheckBtn.Text = "Stop Monitoring";
+                    startCheckBtn.Text = @"Stop Monitoring";
                     checkGameTimer.Start();
                 }
                 else
                 {
                     runLbl.ForeColor = Color.Red;
-                    runLbl.Text = "N/A";
+                    runLbl.Text = @"N/A";
 
                     dcLbl.ForeColor = Color.Red;
-                    dcLbl.Text = "N/A";
+                    dcLbl.Text = @"N/A";
 
-                    traySystem.Text = "BDCR";
+                    traySystem.Text = @"BDCR";
 
-                    startCheckBtn.Text = "Start Monitoring";
+                    startCheckBtn.Text = @"Start Monitoring";
                     checkGameTimer.Stop();
                 }
             }
@@ -77,22 +73,21 @@ namespace BDAC
                 checkAutoClose.Stop();
                 checkShutdown.Stop();
 
-                Functions.autoClose = false;
+                Functions.AutoClose = false;
 
-                startCheckBtn.Text = "Stop Monitoring";
+                startCheckBtn.Text = @"Stop Monitoring";
                 checkGameTimer.Start();
             }
         }
 
         private void checkGame_Tick(object sender, EventArgs e)
         {
-            //Stop doing extra work if
-            //the game is scheduled for closing
-            if (Functions.autoClose)
+            //Stop doing extra work if the game is scheduled for closing
+            if (Functions.AutoClose)
             {
                 checkGameTimer.Stop();
 
-                closeTime = 0;
+                CloseTime = 0;
                 checkAutoClose.Start();
                 return;
             }
@@ -100,31 +95,30 @@ namespace BDAC
             //Do checks on a new thread
             Functions.Monitor();
 
-            //Update the labels depending
-            //on the results of the checks
-            switch (Functions.gRunning)
+            //Update the labels depending on the results of the checks
+            switch (Functions.GRunning)
             {
                 case true:
                     runLbl.ForeColor = Color.Green;
-                    runLbl.Text = "Running";
+                    runLbl.Text = @"Running";
                     break;
                 case false:
                     runLbl.ForeColor = Color.Red;
-                    runLbl.Text = "Not Running";
+                    runLbl.Text = @"Not Running";
                     break;
             }
 
-            switch (Functions.gConnected)
+            switch (Functions.GConnected)
             {
                 case true:
                     dcLbl.ForeColor = Color.Green;
-                    dcLbl.Text = "Connected";
-                    traySystem.Text = "BDAC - Connected";
+                    dcLbl.Text = @"Connected";
+                    traySystem.Text = @"BDAC - Connected";
                     break;
                 case false:
                     dcLbl.ForeColor = Color.Red;
-                    dcLbl.Text = "Disconnected";
-                    traySystem.Text = "BDAC - Disconnected";
+                    dcLbl.Text = @"Disconnected";
+                    traySystem.Text = @"BDAC - Disconnected";
                     break;
             }
         }
@@ -132,13 +126,13 @@ namespace BDAC
         private void checkAutoClose_Tick(object sender, EventArgs e)
         {
             //Close the game after 60 seconds
-            if (closeTime >= 60)
+            if (CloseTime >= 60)
             {
                 startCheckBtn.Enabled = false;
-                startCheckBtn.Text = "Auto Closing BDO";
+                startCheckBtn.Text = @"Auto Closing BDO";
 
                 checkAutoClose.Stop();
-                Functions.closeGame();
+                Functions.CloseGame();
 
                 //Schedule shutdown if
                 //the option is checked
@@ -153,26 +147,26 @@ namespace BDAC
                 return;
             }
 
-            startCheckBtn.Text = "Auto closing BDO in " + (60 - closeTime) + " second(s) [Cancel]";
-            closeTime++;
+            startCheckBtn.Text = @"Auto closing BDO in " + (60 - CloseTime) + @" second(s) [Cancel]";
+            CloseTime++;
         }
 
         private void checkShutdown_Tick(object sender, EventArgs e)
         {
             //Shutdown PC after 5 minutes
-            if (shutdownPC >= 300)
+            if (ShutdownPc >= 300)
             {
                 startCheckBtn.Enabled = false;
-                startCheckBtn.Text = "Shutting PC down";
+                startCheckBtn.Text = @"Shutting PC down";
 
                 checkShutdown.Stop();
-                Functions.shutdownPC();
+                Functions.ShutdownPc();
 
                 return;
             }
 
-            startCheckBtn.Text = "Shutting PC down in " + TimeSpan.FromSeconds(300 - shutdownPC).ToString(@"mm\:ss") + " minute(s) [Cancel]";
-            shutdownPC++;
+            startCheckBtn.Text = @"Shutting PC down in " + TimeSpan.FromSeconds(300 - ShutdownPc).ToString(@"mm\:ss") + @" minute(s) [Cancel]";
+            ShutdownPc++;
         }
     }
 }

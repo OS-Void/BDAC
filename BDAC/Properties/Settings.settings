@@ -2,10 +2,10 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="BDAC.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="Tray" Type="System.Boolean" Scope="User">
+    <Setting Name="Tray" Provider="BDAC.PortableSettingsProvider" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AutoClose" Type="System.Boolean" Scope="User">
+    <Setting Name="AutoClose" Provider="BDAC.PortableSettingsProvider" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="Shutdown" Type="System.Boolean" Scope="User">

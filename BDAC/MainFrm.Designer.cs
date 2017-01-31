@@ -1,6 +1,6 @@
 ﻿namespace BDAC
 {
-    partial class Main_Frm
+    partial class MainFrm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Frm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainFrm));
             this.traySystem = new System.Windows.Forms.NotifyIcon(this.components);
             this.checkGameTimer = new System.Windows.Forms.Timer(this.components);
             this.button1 = new System.Windows.Forms.Button();
@@ -215,7 +215,7 @@
             this.nMinBox.UseVisualStyleBackColor = true;
             this.nMinBox.CheckedChanged += new System.EventHandler(this.nSetting_CheckedChanged);
             // 
-            // Main_Frm
+            // MainFrm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -224,7 +224,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "Main_Frm";
+            this.Name = "MainFrm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "BD Auto Closer";
             this.Resize += new System.EventHandler(this.Main_Frm_Resize);

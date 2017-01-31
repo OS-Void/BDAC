@@ -3,14 +3,14 @@ using System.Windows.Forms;
 
 namespace BDAC
 {
-    static class Program
+    public static class Program
     {
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Main_Frm());
+            Application.Run(new MainFrm());
         }
     }
 }
