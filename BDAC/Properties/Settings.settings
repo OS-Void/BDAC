@@ -8,7 +8,7 @@
     <Setting Name="AutoClose" Provider="BDAC.PortableSettingsProvider" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="Shutdown" Type="System.Boolean" Scope="User">
+    <Setting Name="Shutdown" Provider="BDAC.PortableSettingsProvider" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>

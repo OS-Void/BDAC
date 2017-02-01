@@ -157,7 +157,7 @@ namespace BDAC
                         _mainform.startCheckBtn.Text = @"BDO Auto Closed";
                         _mainform.traySystem.Text = @"BDAC - Auto Closed";
 
-                        _mainform.checkShutdown.Start();
+                        //_mainform.checkShutdown.Start();
                     }
                 }
             }
@@ -170,7 +170,7 @@ namespace BDAC
         public void ShutdownPc()
         {
             //Start the shutdown
-            Process.Start("shutdown", "/s /t 0");
+            //Process.Start("shutdown", "/s /t 0");
 
             // the argument /s is to shut down the computer.
             // the argument /t sets the time-out period before doing (how long until shutdown)

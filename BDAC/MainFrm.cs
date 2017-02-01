@@ -16,6 +16,7 @@ namespace BDAC
             InitializeComponent();
             nShutdownDC.Enabled = false;
             nShutdownDC.Visible = false;
+            nShutdownDC.Checked = false;
         }
 
         private void Main_Frm_Resize(object sender, EventArgs e)
@@ -138,7 +139,7 @@ namespace BDAC
                 //the option is checked
                 if (nShutdownDC.Checked)
                 {
-                    checkShutdown.Start();
+                    //checkShutdown.Start();
                     startCheckBtn.Enabled = true;
                     return;
                 }
