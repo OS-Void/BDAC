@@ -54,12 +54,12 @@
             // traySystem
             // 
             this.traySystem.Icon = ((System.Drawing.Icon)(resources.GetObject("traySystem.Icon")));
-            this.traySystem.Text = "BDCR";
+            this.traySystem.Text = "BDAC";
             this.traySystem.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.traySystem_MouseDoubleClick);
             // 
             // checkGameTimer
             // 
-            this.checkGameTimer.Interval = 3000;
+            this.checkGameTimer.Interval = 30000;
             this.checkGameTimer.Tick += new System.EventHandler(this.checkGame_Tick);
             // 
             // button1
@@ -227,6 +227,7 @@
             this.Name = "MainFrm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "BD Auto Closer";
+            this.Load += new System.EventHandler(this.MainFrm_Load);
             this.Resize += new System.EventHandler(this.Main_Frm_Resize);
             this.xylosTabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);

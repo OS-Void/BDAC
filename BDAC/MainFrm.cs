@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Globalization;
+using System.Reflection;
+using System.Security.Principal;
 using System.Windows.Forms;
 
 namespace BDAC
@@ -11,6 +13,8 @@ namespace BDAC
         public int CloseTime;
         public int ShutdownPc;
 
+        private readonly AssemblyName _assemblyName = Assembly.GetExecutingAssembly().GetName();
+
         public MainFrm()
         {
             Functions = new Functions(this);
@@ -20,10 +24,23 @@ namespace BDAC
             nShutdownDC.Checked = false;
         }
 
+        private void MainFrm_Load(object sender, EventArgs e)
+        {
+            Text = RunningAsAdmin()
+                ? string.Format("[{0}]" + @" v{1} - [Admin]", _assemblyName.Name, _assemblyName.Version)
+                : string.Format("[{0}]" + @" v{1}  - [Non-Admin]", _assemblyName.Name, _assemblyName.Version);
+        }
+
+        private static bool RunningAsAdmin()
+        {
+            WindowsPrincipal checkAdmin = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            return checkAdmin.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
         private void Main_Frm_Resize(object sender, EventArgs e)
         {
             //Send BDAC to tray when it minimizes if the tray option is checked
-            if (nMinBox.Checked && WindowState == FormWindowState.Minimized)
+            if (nMinBox.Checked && WindowState == FormWindowState.Normal)
             {
                 Hide();
                 traySystem.Visible = true;
@@ -166,7 +183,7 @@ namespace BDAC
                 startCheckBtn.Text = @"Shutting PC down";
 
                 checkShutdown.Stop();
-                Functions.ShutdownPc();
+                //Functions.ShutdownPc();
 
                 return;
             }

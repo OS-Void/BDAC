@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("BD Auto Closer")]
-[assembly: AssemblyCopyright("Original code by iPollox, Additional changes by Zero - Additional changes by Shadowtrance")]
+[assembly: AssemblyCopyright("Original code by iPollox, Additional changes by Zero and Shadowtrance")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
