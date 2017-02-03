@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace BDAC
@@ -53,7 +54,9 @@ namespace BDAC
                 if (!checkGameTimer.Enabled)
                 {
                     startCheckBtn.Text = @"Stop Monitoring";
+                    checkGame_Tick(this, null);
                     checkGameTimer.Start();
+                    Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Started monitoring.");
                 }
                 else
                 {
@@ -63,10 +66,11 @@ namespace BDAC
                     dcLbl.ForeColor = Color.Red;
                     dcLbl.Text = @"N/A";
 
-                    traySystem.Text = @"BDCR";
+                    traySystem.Text = @"BDAC";
 
                     startCheckBtn.Text = @"Start Monitoring";
                     checkGameTimer.Stop();
+                    Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Stopped monitoring.");
                 }
             }
             else
@@ -78,6 +82,7 @@ namespace BDAC
 
                 startCheckBtn.Text = @"Stop Monitoring";
                 checkGameTimer.Start();
+                Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Started monitoring.");
             }
         }
 

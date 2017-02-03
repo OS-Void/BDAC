@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -33,6 +34,9 @@ namespace BDAC
         public bool GRunning;
         public bool GConnected;
         public bool AutoClose;
+
+        private int _concurrentFails;
+        public int MaxAttempts = 3;
 
         public void Monitor()
         {
@@ -120,14 +124,21 @@ namespace BDAC
                                     tokens[4].Equals("ESTABLISHED"))
                             .Any(
                                 tokens =>
-                                    Process.GetProcessById(Convert.ToInt32(tokens[5].ToString()))
+                                    Process.GetProcessById(Convert.ToInt32(tokens[5]))
                                         .ProcessName.Contains("BlackDesert")))
                     {
+                        _concurrentFails = 0;
                         return true;
                     }
 
-                    //BDO has no active connection
+                    _concurrentFails++;
                     if (_mainform.nCloseDC.Checked)
+                    {
+                        Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Failed to detect a connection " + _concurrentFails +
+                            " time(s). Will attempt " + (MaxAttempts - _concurrentFails) + " more times.");
+                    }
+                    //BDO has no active connection
+                    if (_mainform.nCloseDC.Checked && _concurrentFails >= MaxAttempts)
                     {
                         AutoClose = true;
                     }
@@ -159,12 +170,21 @@ namespace BDAC
 
                         //_mainform.checkShutdown.Start();
                     }
+                    Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Killed all running instances.");
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, @"BD Auto Closer", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        public void Log(string msg)
+        {
+            StreamWriter writer = new StreamWriter("log.txt", true);
+            writer.WriteLine(msg);
+            writer.Close();
+            writer.Dispose();
         }
 
         public void ShutdownPc()
