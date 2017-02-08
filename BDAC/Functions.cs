@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -25,6 +27,19 @@ namespace BDAC
         //As I do not know if the 32bit version
         //Of BDO has '32' at the end of it's name
         private readonly Process[] _bdo = Process.GetProcessesByName("BlackDesert");
+
+        public static bool RunningAsAdmin()
+        {
+            WindowsPrincipal checkAdmin = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            return checkAdmin.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        public void CreateConfig()
+        {
+            _mainform.nMinBox.Checked = false;
+            _mainform.nCloseDC.Checked = false;
+            _mainform.nShutdownDC.Checked = false;
+        }
 
         #region Monitoring Thread
 
@@ -164,9 +179,10 @@ namespace BDAC
                     {
                         bd.Kill();
                         _mainform.runLbl.Text = @"Auto Closed";
-                        _mainform.runLbl.ForeColor = System.Drawing.Color.Red;
+                        _mainform.runLbl.ForeColor = Color.Red;
                         _mainform.startCheckBtn.Text = @"BDO Auto Closed";
                         _mainform.traySystem.Text = @"BDAC - Auto Closed";
+                        _mainform.runLed.On = false;
 
                         //_mainform.checkShutdown.Start();
                     }
@@ -181,7 +197,7 @@ namespace BDAC
 
         public void Log(string msg)
         {
-            StreamWriter writer = new StreamWriter("log.txt", true);
+            StreamWriter writer = new StreamWriter(_mainform.Logfile, true);
             writer.WriteLine(msg);
             writer.Close();
             writer.Dispose();
