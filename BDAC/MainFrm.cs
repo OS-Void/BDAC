@@ -118,7 +118,7 @@ namespace BDAC
                     checkGameTimer.Start();
 
                     //Auto Minimize bdac after 5 seconds if setting is checked and game is running and connected.
-                    if (nMinBox.Checked && runLbl.Text != @"Running" && dcLbl.Text != @"Connected")
+                    if (nMinBox.Checked && runLbl.Text == @"Running" && dcLbl.Text == @"Connected")
                     {
                         MinTime = 0;
                         minTimer.Start();
