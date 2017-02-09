@@ -15,8 +15,25 @@ Changes by **Zero**:
 * New icon
 
 Changes by **Shadowtrance**:
-* To be added...
+* Run program as admin
+* Form theme change
+* Minor clean up and design layout adjustments
+* Fix auto shutdown pc issue
+* Auto minimize bdac after 5 seconds if setting is checked
+* Custom settings xml file, program is now self contained, no more appdata settings bs.
 
+## First Run
+* Start BDO and login if it isn't already running and connected
+* Start BDAC, you will start on the settings tab, select the settings you want
+* Go to the Main tab and press the "Start Monitoring" button
+* Go AFK
+* Done
+
+## Every Run after first
+* Start BDO and login if it isn't already running and connected
+* Start BDAC and press the "Start Monitoring" button
+* Go AFK
+* Done
 
 ## Contributors
 
