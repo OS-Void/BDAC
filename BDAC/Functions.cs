@@ -182,7 +182,7 @@ namespace BDAC
                         _mainform.runLbl.ForeColor = Color.Red;
                         _mainform.startCheckBtn.Text = @"BDO Auto Closed";
                         _mainform.traySystem.Text = @"BDAC - Auto Closed";
-                        _mainform.runLed.On = false;
+                        _mainform.runLed.On = true;
                         _mainform.runLed.Color = Color.Red;
 
                         if (_mainform.nShutdownDC.Checked)
