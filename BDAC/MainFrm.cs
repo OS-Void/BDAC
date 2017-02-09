@@ -12,7 +12,7 @@ namespace BDAC
         public Functions Functions;
         public int CloseTime;
         public int ShutdownPc;
-
+        public int MinTime;
         public string Logfile = "bdaclog.txt";
 
         private readonly AssemblyName _assemblyName = Assembly.GetExecutingAssembly().GetName();
@@ -26,10 +26,9 @@ namespace BDAC
             Functions = new Functions(this);
             InitializeComponent();
 
-            nShutdownDC.Enabled = false;
-            nShutdownDC.Visible = false;
             runLed.On = false;
             dcLed.On = false;
+            minTimelabel.Text = string.Empty;
         }
 
         private void MainFrm_Load(object sender, EventArgs e)
@@ -79,6 +78,7 @@ namespace BDAC
             Show();
             WindowState = FormWindowState.Normal;
             traySystem.Visible = false;
+            minTimelabel.Text = string.Empty;
         }
 
         #endregion
@@ -116,6 +116,13 @@ namespace BDAC
                     startCheckBtn.Text = @"Stop Monitoring";
                     checkGame_Tick(this, null);
                     checkGameTimer.Start();
+
+                    //Auto Minimize bdac after 5 seconds if setting is checked and game is running and connected.
+                    if (nMinBox.Checked && runLbl.Text != @"Running" && dcLbl.Text != @"Connected")
+                    {
+                        MinTime = 0;
+                        minTimer.Start();
+                    }
                     Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Started monitoring.");
                 }
                 else
@@ -132,6 +139,9 @@ namespace BDAC
 
                     startCheckBtn.Text = @"Start Monitoring";
                     checkGameTimer.Stop();
+
+                    minTimelabel.Text = string.Empty;
+                    minTimer.Stop();
                     Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Stopped monitoring.");
                 }
             }
@@ -157,6 +167,7 @@ namespace BDAC
 
                 CloseTime = 0;
                 checkAutoClose.Start();
+                Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + @"Auto closing BDO in 60 seconds.");
                 return;
             }
 
@@ -214,7 +225,8 @@ namespace BDAC
                 //the option is checked
                 if (nShutdownDC.Checked)
                 {
-                    //checkShutdown.Start();
+                    checkShutdown.Start();
+                    Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + @" Shutting PC down in 5 minutes.");
                     startCheckBtn.Enabled = true;
                     return;
                 }
@@ -236,13 +248,26 @@ namespace BDAC
                 startCheckBtn.Text = @"Shutting PC down";
 
                 checkShutdown.Stop();
-                //Functions.ShutdownPc();
+                Functions.ShutdownPc();
 
                 return;
             }
 
             startCheckBtn.Text = @"Shutting PC down in " + TimeSpan.FromSeconds(300 - ShutdownPc).ToString(@"mm\:ss") + @" minute(s) [Cancel]";
             ShutdownPc++;
+        }
+
+        private void minTimer_Tick(object sender, EventArgs e)
+        {
+            //Auto Minimize bdac after 5 seconds
+            if (MinTime >= 5)
+            {
+                Hide();
+                minTimer.Stop();
+                minTimelabel.Text = string.Empty;
+            }
+            minTimelabel.Text = @"Minimizing in " + (5 - MinTime) + @" seconds";
+            MinTime++;
         }
 
         #endregion
