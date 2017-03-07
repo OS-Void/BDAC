@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace BDAC
 {
@@ -22,11 +20,6 @@ namespace BDAC
 
         private readonly Process[] _bd64 = Process.GetProcessesByName("BlackDesert64");
         private readonly Process[] _bd32 = Process.GetProcessesByName("BlackDesert32");
-
-        //This is a backup process name
-        //As I do not know if the 32bit version
-        //Of BDO has '32' at the end of it's name
-        private readonly Process[] _bdo = Process.GetProcessesByName("BlackDesert");
 
         public static bool RunningAsAdmin()
         {
@@ -86,13 +79,13 @@ namespace BDAC
             try
             {
                 //Check if BDO's process is running
-                return _bd64.Concat(_bd32).Concat(_bdo).Any();
+                return _bd64.Concat(_bd32).Any();
 
                 //Not running
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, @"BD Auto Closer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(ex.Message);
                 return false;
             }
         }
@@ -149,8 +142,7 @@ namespace BDAC
                     _concurrentFails++;
                     if (_mainform.nCloseDC.Checked)
                     {
-                        Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Failed to detect a connection " + _concurrentFails +
-                            " time(s). Will attempt " + (MaxAttempts - _concurrentFails) + " more times.");
+                        Log("Failed to detect a connection " + _concurrentFails + " time(s). Will attempt " + (MaxAttempts - _concurrentFails) + " more times.");
                     }
                     //BDO has no active connection
                     if (_mainform.nCloseDC.Checked && _concurrentFails >= MaxAttempts)
@@ -163,7 +155,7 @@ namespace BDAC
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, @"BD Auto Closer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(ex.Message);
                 _mainform.traySystem.Text = @"BDAC - Disconnected";
                 return false;
             }
@@ -175,7 +167,7 @@ namespace BDAC
             {
                 if (_mainform.nCloseDC.Checked)
                 {
-                    foreach (Process bd in _bd64.Concat(_bd32).Concat(_bdo))
+                    foreach (Process bd in _bd64.Concat(_bd32))
                     {
                         bd.Kill();
                         _mainform.runLbl.Text = @"Auto Closed";
@@ -189,23 +181,23 @@ namespace BDAC
                         {
                             _mainform.checkShutdown.Start();
                         }
+                        break;
                     }
                     _mainform.checkGameTimer.Stop();
-                    Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Killed all running instances.");
+                    Log("Killed all running instances.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, @"BD Auto Closer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Log(ex.Message);
             }
         }
 
         public void Log(string msg)
         {
             StreamWriter writer = new StreamWriter(_mainform.Logfile, true);
-            writer.WriteLine(msg);
+            writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd | HH:mm:ss | ") + msg);
             writer.Close();
-            writer.Dispose();
         }
 
         public void ShutdownPc()

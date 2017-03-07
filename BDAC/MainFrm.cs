@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -35,23 +34,33 @@ namespace BDAC
         {
             if (!File.Exists(AppConfig.ConfigFile))
             {
+                Functions.Log("Settings file not found, creating a new one.");
                 Functions.CreateConfig();
                 iTalk_TabControl1.SelectedTab = settingsTabPage;
             }
             else
             {
+                Functions.Log("Settings file found, loading settings.");
                 ConfigManager.LoadConfig();
 
                 nMinBox.Checked = ConfigManager.Config.Tray;
                 nCloseDC.Checked = ConfigManager.Config.AutoClose;
                 nShutdownDC.Checked = ConfigManager.Config.ShutDown;
 
+                Functions.Log("Settings Loaded.");
                 iTalk_TabControl1.SelectedTab = mainTabPage;
             }
 
-            themeContainer.Text = Functions.RunningAsAdmin()
-                ? string.Format("{0}" + @" {1}", _assemblyName.Name, "- [Admin]")
-                : string.Format("{0}" + @" {1}", _assemblyName.Name, "- [Non-Admin]");
+            if (Functions.RunningAsAdmin())
+            {
+                themeContainer.Text = string.Format("{0}" + @" {1}", _assemblyName.Name, "- [Admin]");
+                Functions.Log("Running " + _assemblyName.Name + " as admin.");
+            }
+            else
+            {
+                themeContainer.Text = string.Format("{0}" + @" {1}", _assemblyName.Name, "- [Non-Admin]");
+                Functions.Log("Running " + _assemblyName.Name + " as non-admin.");
+            }
         }
 
         private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
@@ -60,6 +69,7 @@ namespace BDAC
             ConfigManager.Config.AutoClose = nCloseDC.Checked;
             ConfigManager.Config.ShutDown = nShutdownDC.Checked;
             ConfigManager.SaveConfig();
+            Functions.Log("Settings Saved.");
         }
 
         private void MainFrm_Resize(object sender, EventArgs e)
@@ -123,7 +133,7 @@ namespace BDAC
                         MinTime = 0;
                         minTimer.Start();
                     }
-                    Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Started monitoring.");
+                    Functions.Log("Started monitoring.");
                 }
                 else
                 {
@@ -142,7 +152,7 @@ namespace BDAC
 
                     minTimelabel.Text = string.Empty;
                     minTimer.Stop();
-                    Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Stopped monitoring.");
+                    Functions.Log("Stopped monitoring.");
                 }
             }
             else
@@ -154,7 +164,7 @@ namespace BDAC
 
                 startCheckBtn.Text = @"Stop Monitoring";
                 checkGameTimer.Start();
-                Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + ": Started monitoring.");
+                Functions.Log("Started monitoring.");
             }
         }
 
@@ -167,7 +177,7 @@ namespace BDAC
 
                 CloseTime = 0;
                 checkAutoClose.Start();
-                Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + @"Auto closing BDO in 60 seconds.");
+                Functions.Log(@"Auto closing BDO in 60 seconds.");
                 return;
             }
 
@@ -226,7 +236,7 @@ namespace BDAC
                 if (nShutdownDC.Checked)
                 {
                     checkShutdown.Start();
-                    Functions.Log(DateTime.Now.ToString(CultureInfo.CurrentCulture) + @" Shutting PC down in 5 minutes.");
+                    Functions.Log(@"Shutting PC down in 5 minutes.");
                     startCheckBtn.Enabled = true;
                     return;
                 }
