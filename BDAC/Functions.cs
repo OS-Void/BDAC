@@ -21,19 +21,6 @@ namespace BDAC
         private readonly Process[] _bd64 = Process.GetProcessesByName("BlackDesert64");
         private readonly Process[] _bd32 = Process.GetProcessesByName("BlackDesert32");
 
-        public static bool RunningAsAdmin()
-        {
-            WindowsPrincipal checkAdmin = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-            return checkAdmin.IsInRole(WindowsBuiltInRole.Administrator);
-        }
-
-        public void CreateConfig()
-        {
-            _mainform.nMinBox.Checked = false;
-            _mainform.nCloseDC.Checked = false;
-            _mainform.nShutdownDC.Checked = false;
-        }
-
         #region Monitoring Thread
 
         private ThreadStart _tsMonitor;
@@ -63,13 +50,11 @@ namespace BDAC
 
         private void MMonitor()
         {
-            //Check if game is running
-            GRunning = IsProcessRunning();
-
-            //Check if the game is connected
-            //only when the game is running
-            if (GRunning)
+            //Check if the game is running
+            if (GRunning = IsProcessRunning())
             {
+                //If the game is running
+                //then check if it's connected
                 GConnected = IsConnected();
             }
         }
@@ -80,8 +65,6 @@ namespace BDAC
             {
                 //Check if BDO's process is running
                 return _bd64.Concat(_bd32).Any();
-
-                //Not running
             }
             catch (Exception ex)
             {
@@ -115,7 +98,6 @@ namespace BDAC
                     //-o Displays active TCP connections and includes
                     //the process ID (PID) for each connection.
 
-
                     p.StartInfo = ps;
                     p.Start();
 
@@ -139,11 +121,12 @@ namespace BDAC
                         return true;
                     }
 
-                    _concurrentFails++;
                     if (_mainform.nCloseDC.Checked)
                     {
+                        _concurrentFails++;
                         Log("Failed to detect a connection " + _concurrentFails + " time(s). Will attempt " + (MaxAttempts - _concurrentFails) + " more times.");
                     }
+
                     //BDO has no active connection
                     if (_mainform.nCloseDC.Checked && _concurrentFails >= MaxAttempts)
                     {
@@ -181,8 +164,10 @@ namespace BDAC
                         {
                             _mainform.checkShutdown.Start();
                         }
+
                         break;
                     }
+
                     _mainform.checkGameTimer.Stop();
                     Log("Killed all running instances.");
                 }
@@ -196,7 +181,7 @@ namespace BDAC
         public void Log(string msg)
         {
             StreamWriter writer = new StreamWriter(_mainform.Logfile, true);
-            writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd | HH:mm:ss | ") + msg);
+            writer.WriteLine(DateTime.Now.ToString(@"[MMMM dd yyyy] HH:mm:ss | ") + msg);
             writer.Close();
         }
 

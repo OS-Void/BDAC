@@ -35,7 +35,8 @@ namespace BDAC
             if (!File.Exists(AppConfig.ConfigFile))
             {
                 Functions.Log("Settings file not found, creating a new one.");
-                Functions.CreateConfig();
+                ConfigManager.SaveConfig();
+
                 iTalk_TabControl1.SelectedTab = settingsTabPage;
             }
             else
@@ -49,17 +50,6 @@ namespace BDAC
 
                 Functions.Log("Settings Loaded.");
                 iTalk_TabControl1.SelectedTab = mainTabPage;
-            }
-
-            if (Functions.RunningAsAdmin())
-            {
-                themeContainer.Text = string.Format("{0}" + @" {1}", _assemblyName.Name, "- [Admin]");
-                Functions.Log("Running " + _assemblyName.Name + " as admin.");
-            }
-            else
-            {
-                themeContainer.Text = string.Format("{0}" + @" {1}", _assemblyName.Name, "- [Non-Admin]");
-                Functions.Log("Running " + _assemblyName.Name + " as non-admin.");
             }
         }
 
@@ -75,7 +65,7 @@ namespace BDAC
         private void MainFrm_Resize(object sender, EventArgs e)
         {
             //Send BDAC to tray when it minimizes if the tray option is checked
-            if (nMinBox.Checked && WindowState == FormWindowState.Normal)
+            if (nMinBox.Checked && WindowState == FormWindowState.Minimized)
             {
                 Hide();
                 traySystem.Visible = true;
@@ -89,28 +79,6 @@ namespace BDAC
             WindowState = FormWindowState.Normal;
             traySystem.Visible = false;
             minTimelabel.Text = string.Empty;
-        }
-
-        #endregion
-
-        #region Settings Tab
-
-        private void nMinBox_CheckedChanged(object sender)
-        {
-            ConfigManager.Config.Tray = nMinBox.Checked;
-            ConfigManager.SaveConfig();
-        }
-
-        private void nCloseDC_CheckedChanged(object sender)
-        {
-            ConfigManager.Config.AutoClose = nCloseDC.Checked;
-            ConfigManager.SaveConfig();
-        }
-
-        private void nShutdownDC_CheckedChanged(object sender)
-        {
-            ConfigManager.Config.ShutDown = nShutdownDC.Checked;
-            ConfigManager.SaveConfig();
         }
 
         #endregion
@@ -278,6 +246,28 @@ namespace BDAC
             }
             minTimelabel.Text = @"Minimizing in " + (5 - MinTime) + @" seconds";
             MinTime++;
+        }
+
+        #endregion
+
+        #region Settings Tab
+
+        private void nMinBox_CheckedChanged(object sender)
+        {
+            ConfigManager.Config.Tray = nMinBox.Checked;
+            ConfigManager.SaveConfig();
+        }
+
+        private void nCloseDC_CheckedChanged(object sender)
+        {
+            ConfigManager.Config.AutoClose = nCloseDC.Checked;
+            ConfigManager.SaveConfig();
+        }
+
+        private void nShutdownDC_CheckedChanged(object sender)
+        {
+            ConfigManager.Config.ShutDown = nShutdownDC.Checked;
+            ConfigManager.SaveConfig();
         }
 
         #endregion
