@@ -59,5 +59,15 @@ namespace BDAC.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon bdo_black_spirit_reaper_icon {
+            get {
+                object obj = ResourceManager.GetObject("bdo_black_spirit_reaper_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }
