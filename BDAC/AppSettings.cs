@@ -42,6 +42,7 @@ namespace BDAC
     public class AppSettings
     {
         private bool _tray;
+        private bool _log;
         private bool _autoClose;
         private bool _shutDown;
 
@@ -49,6 +50,12 @@ namespace BDAC
         {
             get { return _tray; }
             set { _tray = value; }
+        }
+
+        public bool Log
+        {
+            get { return _log; }
+            set { _log = value; }
         }
 
         public bool AutoClose

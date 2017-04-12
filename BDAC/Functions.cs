@@ -1,37 +1,43 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Security.Principal;
-using System.Text.RegularExpressions;
+using System.Drawing;
 using System.Threading;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace BDAC
 {
     public class Functions
     {
-        private readonly MainFrm _mainform;
-
+        private MainFrm _mainform;
         public Functions(MainFrm frm)
         {
             _mainform = frm;
         }
 
-        private readonly Process[] _bd64 = Process.GetProcessesByName("BlackDesert64");
-        private readonly Process[] _bd32 = Process.GetProcessesByName("BlackDesert32");
+        #region Variables
+
+        //BDO Process Names
+        private Process[] _bd64;
+        private Process[] _bd32;
+
+        //Game Status
+        public bool GRunning;
+        public bool GConnected;
+
+        //Auto Close and Shutdown
+        public readonly int MaxAttempts = 3;
+        public int _concurrentFails;
+
+        public bool AutoClose;
+
+        #endregion
 
         #region Monitoring Thread
 
         private ThreadStart _tsMonitor;
         private Thread _monitor;
-
-        public bool GRunning;
-        public bool GConnected;
-        public bool AutoClose;
-
-        private int _concurrentFails;
-        public int MaxAttempts = 3;
 
         public void Monitor()
         {
@@ -39,7 +45,7 @@ namespace BDAC
             //To keep the UI responsive/lag-less at all times
             _tsMonitor = MMonitor;
             _monitor = new Thread(_tsMonitor);
-
+            
             //Start the thread
             _monitor.Start();
 
@@ -59,10 +65,22 @@ namespace BDAC
             }
         }
 
+        #endregion
+
+        #region Game Checker
+
+        private void RefreshProcess()
+        {
+            _bd64 = Process.GetProcessesByName("BlackDesert64");
+            _bd32 = Process.GetProcessesByName("BlackDesert32");
+        }
+
         public bool IsProcessRunning()
         {
             try
             {
+                RefreshProcess();
+
                 //Check if BDO's process is running
                 return _bd64.Concat(_bd32).Any();
             }
@@ -125,12 +143,15 @@ namespace BDAC
                     {
                         _concurrentFails++;
                         Log("Failed to detect a connection " + _concurrentFails + " time(s). Will attempt " + (MaxAttempts - _concurrentFails) + " more times.");
-                    }
 
-                    //BDO has no active connection
-                    if (_mainform.nCloseDC.Checked && _concurrentFails >= MaxAttempts)
+                        if (_concurrentFails >= MaxAttempts)
+                        {
+                            AutoClose = true;
+                        }
+                    }
+                    else
                     {
-                        AutoClose = true;
+                        _concurrentFails = 0;
                     }
 
                     return false;
@@ -144,33 +165,59 @@ namespace BDAC
             }
         }
 
+        #endregion
+
+        #region Actions
+
         public void CloseGame()
         {
             try
             {
-                if (_mainform.nCloseDC.Checked)
+                RefreshProcess();
+
+                foreach (Process bd in _bd64.Concat(_bd32))
                 {
-                    foreach (Process bd in _bd64.Concat(_bd32))
+                    _mainform.checkAutoClose.Stop();
+
+                    bd.Kill();
+                    _mainform.runLbl.Text = "Auto Closed";
+                    _mainform.runLbl.ForeColor = Color.Red;
+                    _mainform.runLed.On = true;
+                    _mainform.runLed.Color = Color.Red;
+
+                    _mainform.traySystem.Text = "BDAC - Auto Closed";
+
+                    if (_mainform.nShutdownDC.Checked)
                     {
-                        bd.Kill();
-                        _mainform.runLbl.Text = @"Auto Closed";
-                        _mainform.runLbl.ForeColor = Color.Red;
-                        _mainform.startCheckBtn.Text = @"BDO Auto Closed";
-                        _mainform.traySystem.Text = @"BDAC - Auto Closed";
-                        _mainform.runLed.On = true;
-                        _mainform.runLed.Color = Color.Red;
-
-                        if (_mainform.nShutdownDC.Checked)
-                        {
-                            _mainform.checkShutdown.Start();
-                        }
-
-                        break;
+                        _mainform.checkShutdown.Start();
+                        _mainform.startCheckBtn.Text = "Stop Monitoring";
                     }
-
-                    _mainform.checkGameTimer.Stop();
-                    Log("Killed all running instances.");
+                    else
+                    {
+                        _mainform.startCheckBtn.Text = "Start Monitoring";
+                    }
+                    
+                    break;
                 }
+
+                Log("Killed BDO's instance.");
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+            }
+        }
+
+        public void ShutdownPc()
+        {
+            try
+            {
+                //Start the shutdown
+                Process.Start("shutdown", "/s /t 0");
+
+                // the argument /s is to shut down the computer.
+                // the argument /t sets the time-out period before doing (how long until shutdown)
+                // the operation, in our case we have it set to no time-out. 
             }
             catch (Exception ex)
             {
@@ -180,19 +227,12 @@ namespace BDAC
 
         public void Log(string msg)
         {
-            StreamWriter writer = new StreamWriter(_mainform.Logfile, true);
-            writer.WriteLine(DateTime.Now.ToString(@"[MMMM dd yyyy] HH:mm:ss | ") + msg);
-            writer.Close();
-        }
-
-        public void ShutdownPc()
-        {
-            //Start the shutdown
-            Process.Start("shutdown", "/s /t 0");
-
-            // the argument /s is to shut down the computer.
-            // the argument /t sets the time-out period before doing (how long until shutdown)
-            // the operation, in our case we have it set to no time-out. 
+            if(_mainform.nSaveLog.Checked)
+            {
+                StreamWriter writer = new StreamWriter(_mainform.Logfile, true);
+                writer.WriteLine(DateTime.Now.ToString(@"[MMMM dd yyyy] HH:mm:ss | ") + msg);
+                writer.Close();
+            }
         }
 
         #endregion

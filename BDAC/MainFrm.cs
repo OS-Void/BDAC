@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace BDAC
@@ -9,14 +8,14 @@ namespace BDAC
     public partial class MainFrm : Form
     {
         public Functions Functions;
-        public int CloseTime;
-        public int ShutdownPc;
-        public int MinTime;
-        public string Logfile = "bdaclog.txt";
 
-        private readonly AssemblyName _assemblyName = Assembly.GetExecutingAssembly().GetName();
+        public int GameCheckTime;
+        public int CloseBDOTime;
+        public int ShutdownPCTime;
 
-        public readonly AppConfig ConfigManager = new AppConfig();
+        public readonly string Logfile = "bdaclog.txt";
+
+        private readonly AppConfig ConfigManager = new AppConfig();
 
         #region MainFrm
 
@@ -25,41 +24,33 @@ namespace BDAC
             Functions = new Functions(this);
             InitializeComponent();
 
-            runLed.On = false;
-            dcLed.On = false;
-            minTimelabel.Text = string.Empty;
+            statusTimelabel.Text = string.Empty;
         }
 
         private void MainFrm_Load(object sender, EventArgs e)
         {
             if (!File.Exists(AppConfig.ConfigFile))
             {
-                Functions.Log("Settings file not found, creating a new one.");
                 ConfigManager.SaveConfig();
-
                 iTalk_TabControl1.SelectedTab = settingsTabPage;
             }
             else
             {
-                Functions.Log("Settings file found, loading settings.");
                 ConfigManager.LoadConfig();
 
                 nMinBox.Checked = ConfigManager.Config.Tray;
+                nSaveLog.Checked = ConfigManager.Config.Log;
                 nCloseDC.Checked = ConfigManager.Config.AutoClose;
                 nShutdownDC.Checked = ConfigManager.Config.ShutDown;
 
-                Functions.Log("Settings Loaded.");
+                Functions.Log("BD Auto Closer started.");
                 iTalk_TabControl1.SelectedTab = mainTabPage;
             }
         }
 
         private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            ConfigManager.Config.Tray = nMinBox.Checked;
-            ConfigManager.Config.AutoClose = nCloseDC.Checked;
-            ConfigManager.Config.ShutDown = nShutdownDC.Checked;
-            ConfigManager.SaveConfig();
-            Functions.Log("Settings Saved.");
+            Functions.Log("BD Auto Closer closed.");
         }
 
         private void MainFrm_Resize(object sender, EventArgs e)
@@ -68,7 +59,6 @@ namespace BDAC
             if (nMinBox.Checked && WindowState == FormWindowState.Minimized)
             {
                 Hide();
-                traySystem.Visible = true;
             }
         }
 
@@ -77,175 +67,193 @@ namespace BDAC
             //Reveal BDAC when double clicking the tray system
             Show();
             WindowState = FormWindowState.Normal;
-            traySystem.Visible = false;
-            minTimelabel.Text = string.Empty;
         }
 
         #endregion
 
         #region Main Tab
 
-        private void startCheckBtn_Click(object sender, EventArgs e)
+        private void startCheckBtn_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!Functions.AutoClose)
+            //Decide whether to start or stop monitoring
+            if ((!checkGameTimer.Enabled) && (!checkAutoClose.Enabled) && (!checkShutdown.Enabled))
             {
-                if (!checkGameTimer.Enabled)
-                {
-                    startCheckBtn.Text = @"Stop Monitoring";
-                    checkGame_Tick(this, null);
-                    checkGameTimer.Start();
+                startCheckBtn.Text = @"Stop Monitoring";
 
-                    //Auto Minimize bdac after 5 seconds if setting is checked and game is running and connected.
-                    if (nMinBox.Checked && runLbl.Text == @"Running" && dcLbl.Text == @"Connected")
-                    {
-                        MinTime = 0;
-                        minTimer.Start();
-                    }
-                    Functions.Log("Started monitoring.");
-                }
-                else
-                {
-                    runLed.On = false;
-                    runLbl.ForeColor = Color.Red;
-                    runLbl.Text = @"N/A";
+                GameCheckTime = 30;
+                checkGameTimer.Start();
 
-                    dcLed.On = false;
-                    dcLbl.ForeColor = Color.Red;
-                    dcLbl.Text = @"N/A";
-
-                    traySystem.Text = @"BDAC";
-
-                    startCheckBtn.Text = @"Start Monitoring";
-                    checkGameTimer.Stop();
-
-                    minTimelabel.Text = string.Empty;
-                    minTimer.Stop();
-                    Functions.Log("Stopped monitoring.");
-                }
+                Functions.Log("Started monitoring.");
             }
             else
             {
+                Functions.AutoClose = false;
+                Functions._concurrentFails = 0;
+
+                CloseBDOTime = 0;
+                ShutdownPCTime = 0;
+
+                checkGameTimer.Stop();
                 checkAutoClose.Stop();
                 checkShutdown.Stop();
 
-                Functions.AutoClose = false;
+                runLed.On = false;
+                runLbl.ForeColor = Color.Red;
+                runLbl.Text = @"N/A";
 
-                startCheckBtn.Text = @"Stop Monitoring";
-                checkGameTimer.Start();
-                Functions.Log("Started monitoring.");
+                dcLed.On = false;
+                dcLbl.ForeColor = Color.Red;
+                dcLbl.Text = @"N/A";
+
+                traySystem.Text = "BDAC";
+                statusTimelabel.Text = String.Empty;
+                startCheckBtn.Text = "Start Monitoring";
+
+                Functions.Log("Stopped monitoring.");
             }
         }
 
         private void checkGame_Tick(object sender, EventArgs e)
         {
-            //Stop doing extra work if the game is scheduled for closing
-            if (Functions.AutoClose)
+            //Check every 30 seconds
+            if (GameCheckTime >= 30)
             {
-                checkGameTimer.Stop();
+                //Stop doing extra work if the game is scheduled for closing
+                if (Functions.AutoClose)
+                {
+                    GameCheckTime = 0;
+                    checkAutoClose.Start();
 
-                CloseTime = 0;
-                checkAutoClose.Start();
-                Functions.Log(@"Auto closing BDO in 60 seconds.");
+                    Functions.Log(@"Auto closing BDO in 60 seconds.");
+                    return;
+                }
+
+                statusTimelabel.Text = "Checking BDO..";
+
+                //Do checks on a new thread
+                Functions.Monitor();
+
+                //Update the labels depending on the results of the checks
+                switch (Functions.GRunning)
+                {
+                    case true:
+                        runLbl.ForeColor = Color.Green;
+                        runLbl.Text = @"Running";
+                        runLed.On = true;
+                        runLed.Color = Color.Green;
+                        break;
+                    case false:
+                        runLbl.ForeColor = Color.Red;
+                        runLbl.Text = @"Not Running";
+                        runLed.On = true;
+                        runLed.Color = Color.Red;
+                        break;
+                }
+
+                switch (Functions.GConnected)
+                {
+                    case true:
+                        dcLbl.ForeColor = Color.Green;
+                        dcLbl.Text = @"Connected";
+                        traySystem.Text = @"BDAC - Connected";
+                        dcLed.On = true;
+                        dcLed.Color = Color.Green;
+                        break;
+                    case false:
+                        dcLbl.ForeColor = Color.Red;
+                        dcLbl.Text = @"Disconnected";
+                        traySystem.Text = @"BDAC - Disconnected";
+                        dcLed.On = true;
+                        dcLed.Color = Color.Red;
+                        break;
+                }
+
+                GameCheckTime = 0;
                 return;
             }
 
-            //Do checks on a new thread
-            Functions.Monitor();
-
-            //Update the labels depending on the results of the checks
-            switch (Functions.GRunning)
+            //Start Auto Close Timer
+            if (Functions.AutoClose)
             {
-                case true:
-                    runLbl.ForeColor = Color.Green;
-                    runLbl.Text = @"Running";
-                    runLed.On = true;
-                    runLed.Color = Color.Green;
-                    break;
-                case false:
-                    runLbl.ForeColor = Color.Red;
-                    runLbl.Text = @"Not Running";
-                    runLed.On = true;
-                    runLed.Color = Color.Red;
-                    break;
+                checkGameTimer.Stop();
+                checkShutdown.Stop();
+
+                checkAutoClose.Start();
+                return;
             }
 
-            switch (Functions.GConnected)
+            //Start PC Shutdown Timer
+            if (!Functions.GRunning || (!nCloseDC.Checked && !Functions.GConnected))
             {
-                case true:
-                    dcLbl.ForeColor = Color.Green;
-                    dcLbl.Text = @"Connected";
-                    traySystem.Text = @"BDAC - Connected";
-                    dcLed.On = true;
-                    dcLed.Color = Color.Green;
-                    break;
-                case false:
-                    dcLbl.ForeColor = Color.Red;
-                    dcLbl.Text = @"Disconnected";
-                    traySystem.Text = @"BDAC - Disconnected";
-                    dcLed.On = true;
-                    dcLed.Color = Color.Red;
-                    break;
+                if (nShutdownDC.Checked)
+                {
+                    checkGameTimer.Stop();
+                    checkAutoClose.Stop();
+
+                    Functions.Log(@"Shutting PC down in 5 minutes.");
+                    checkShutdown.Start();
+                    return;
+                }
             }
+
+            //Update Status label
+            statusTimelabel.Text = "Checking in " + (30 - GameCheckTime) + " seconds..";
+
+            if ((!checkAutoClose.Enabled) && (!checkShutdown.Enabled))
+            {
+                if (Functions._concurrentFails > 0)
+                {
+                    statusTimelabel.Text += "\nDisconnected.. Attempt " + Functions._concurrentFails + "/" + Functions.MaxAttempts;
+                }
+            }
+
+            GameCheckTime++;
         }
 
         private void checkAutoClose_Tick(object sender, EventArgs e)
         {
             //Close the game after 60 seconds
-            if (CloseTime >= 60)
+            if (CloseBDOTime >= 60)
             {
                 startCheckBtn.Enabled = false;
-                startCheckBtn.Text = @"Auto Closing BDO";
+                startCheckBtn.Text = "Auto Closing BDO";
 
                 checkAutoClose.Stop();
                 Functions.CloseGame();
 
-                //Schedule shutdown if
-                //the option is checked
+                //Schedule shutdown if the option is checked
                 if (nShutdownDC.Checked)
                 {
-                    checkShutdown.Start();
                     Functions.Log(@"Shutting PC down in 5 minutes.");
-                    startCheckBtn.Enabled = true;
-                    return;
+                    checkShutdown.Start();
                 }
 
                 startCheckBtn.Enabled = true;
                 return;
             }
 
-            startCheckBtn.Text = @"Auto closing BDO in " + (60 - CloseTime) + @" second(s) [Cancel]";
-            CloseTime++;
+            statusTimelabel.Text = "Checking in " + (30 - GameCheckTime) + " seconds..\n" + "Auto closing BDO in " + (60 - CloseBDOTime) + @" second(s)";
+            CloseBDOTime++;
         }
 
         private void checkShutdown_Tick(object sender, EventArgs e)
         {
             //Shutdown PC after 5 minutes
-            if (ShutdownPc >= 300)
+            if (ShutdownPCTime >= 300)
             {
                 startCheckBtn.Enabled = false;
                 startCheckBtn.Text = @"Shutting PC down";
 
+                checkGameTimer.Stop();
+                checkAutoClose.Stop();
                 checkShutdown.Stop();
-                Functions.ShutdownPc();
 
+                Functions.ShutdownPc();
                 return;
             }
 
-            startCheckBtn.Text = @"Shutting PC down in " + TimeSpan.FromSeconds(300 - ShutdownPc).ToString(@"mm\:ss") + @" minute(s) [Cancel]";
-            ShutdownPc++;
-        }
-
-        private void minTimer_Tick(object sender, EventArgs e)
-        {
-            //Auto Minimize bdac after 5 seconds
-            if (MinTime >= 5)
-            {
-                Hide();
-                minTimer.Stop();
-                minTimelabel.Text = string.Empty;
-            }
-            minTimelabel.Text = @"Minimizing in " + (5 - MinTime) + @" seconds";
-            MinTime++;
+            statusTimelabel.Text = "Shutting PC down in " + TimeSpan.FromSeconds(300 - ShutdownPCTime).ToString(@"mm\:ss") + " minute(s)";
+            ShutdownPCTime++;
         }
 
         #endregion
@@ -255,6 +263,12 @@ namespace BDAC
         private void nMinBox_CheckedChanged(object sender)
         {
             ConfigManager.Config.Tray = nMinBox.Checked;
+            ConfigManager.SaveConfig();
+        }
+
+        private void nSaveLog_CheckedChanged(object sender)
+        {
+            ConfigManager.Config.Log = nSaveLog.Checked;
             ConfigManager.SaveConfig();
         }
 
@@ -271,5 +285,6 @@ namespace BDAC
         }
 
         #endregion
+
     }
 }
