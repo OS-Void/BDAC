@@ -1,12 +1,29 @@
 BDAC - Black Desert Auto Closer 
 ========
 
-A simple tool to monitor Black Desert Online while afk and close it when disconnected and stuck on the main menu screen, putting undue stress on your system.
+A simple tool to monitor Black Desert Online while afk and auto closes the game when it gets disconnected, putting undue stress on your system.
 
+## First Run
+* Start BDO and login if it isn't already running and connected
+* Start BDAC, you will start on the settings tab, select the settings you want
+* Go to the Main tab and press the "Start Monitoring" button
+* Go AFK
+* Done
+
+## Every Run after first
+* Start BDO and login if it isn't already running and connected
+* Start BDAC and press the "Start Monitoring" button
+* Go AFK
+* Done
 
 ## Changes
 
-Original Code by **iPollox**.
+Latest Changes (1.0.0.4):
+* Tray icon is now always visible
+* Added option to enable/disable logs
+* Slight improvement to the process detection
+* Tweaked and removed unnecessary theme code
+* Slight code clean up
 
 Changes by **Zero**:
 * 30s timer interval
@@ -22,22 +39,9 @@ Changes by **Shadowtrance**:
 * Auto minimize bdac after 5 seconds if setting is checked
 * Custom settings xml file, program is now self contained, no more appdata settings bs.
 
-## First Run
-* Start BDO and login if it isn't already running and connected
-* Start BDAC, you will start on the settings tab, select the settings you want
-* Go to the Main tab and press the "Start Monitoring" button
-* Go AFK
-* Done
-
-## Every Run after first
-* Start BDO and login if it isn't already running and connected
-* Start BDAC and press the "Start Monitoring" button
-* Go AFK
-* Done
-
 ## Contributors
 
-[iPollox](https://github.com/iPollox)   
+[iPollox](https://github.com/iPollox) (Original Author)  
 [Zero](https://github.com/LunarAshes)    
 [Shadowtrance](https://github.com/Shadowtrance)
 
