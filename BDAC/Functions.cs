@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Drawing;
 using System.Threading;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 
 namespace BDAC
 {
@@ -17,10 +17,6 @@ namespace BDAC
         }
 
         #region Variables
-
-        //BDO Process Names
-        private Process[] _bd64;
-        private Process[] _bd32;
 
         //Game Status
         public bool GRunning;
@@ -69,20 +65,17 @@ namespace BDAC
 
         #region Game Checker
 
-        private void RefreshProcess()
+        private IEnumerable<Process> Processes() 
         {
-            _bd64 = Process.GetProcessesByName("BlackDesert64");
-            _bd32 = Process.GetProcessesByName("BlackDesert32");
+            return Process.GetProcessesByName("BlackDesert64").Concat(Process.GetProcessesByName("BlackDesert32"));
         }
 
+        //Check if BDO's process is running
         public bool IsProcessRunning()
         {
             try
             {
-                RefreshProcess();
-
-                //Check if BDO's process is running
-                return _bd64.Concat(_bd32).Any();
+                return Processes().Any();
             }
             catch (Exception ex)
             {
@@ -95,67 +88,10 @@ namespace BDAC
         {
             try
             {
-                using (Process p = new Process())
-                {
-                    ProcessStartInfo ps = new ProcessStartInfo
-                    {
-                        FileName = "netstat.exe",
-                        Arguments = "-n -o",
-                        UseShellExecute = false,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    };
+                var processes = Processes();
+                var establishedConnections = new Connections().GetAllTcpConnections().Where(c => c.State == MibTcpState.ESTABLISHED);
 
-                    //netstat displays active TCP connections and ports
-
-                    //-n Displays active TCP connections, however,
-                    //addresses and port numbers are expressed
-                    //numerically and no attempt is made to determine names.
-
-                    //-o Displays active TCP connections and includes
-                    //the process ID (PID) for each connection.
-
-                    p.StartInfo = ps;
-                    p.Start();
-
-                    StreamReader stdOutput = p.StandardOutput;
-                    string content = stdOutput.ReadToEnd();
-
-                    //Read netstat's output
-                    string[] rows = Regex.Split(content, "\r\n");
-                    if (
-                        rows.Select(t => Regex.Split(t, "\\s+"))
-                            .Where(
-                                tokens =>
-                                    tokens.Length > 4 && (tokens[1].Equals("UDP") || tokens[1].Equals("TCP")) &&
-                                    tokens[4].Equals("ESTABLISHED"))
-                            .Any(
-                                tokens =>
-                                    Process.GetProcessById(Convert.ToInt32(tokens[5]))
-                                        .ProcessName.Contains("BlackDesert")))
-                    {
-                        _concurrentFails = 0;
-                        return true;
-                    }
-
-                    if (_mainform.nCloseDC.Checked)
-                    {
-                        _concurrentFails++;
-                        Log("Failed to detect a connection " + _concurrentFails + " time(s). Will attempt " + (MaxAttempts - _concurrentFails) + " more times.");
-
-                        if (_concurrentFails >= MaxAttempts)
-                        {
-                            AutoClose = true;
-                        }
-                    }
-                    else
-                    {
-                        _concurrentFails = 0;
-                    }
-
-                    return false;
-                }
+                return processes.Any() && establishedConnections.Any(conn => processes.Any(p => conn.ProcessId == p.Id));
             }
             catch (Exception ex)
             {
@@ -173,9 +109,7 @@ namespace BDAC
         {
             try
             {
-                RefreshProcess();
-
-                foreach (Process bd in _bd64.Concat(_bd32))
+                foreach (Process bd in Processes())
                 {
                     _mainform.checkAutoClose.Stop();
 

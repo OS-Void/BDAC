@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppSettings.cs" />
+    <Compile Include="Connections.cs" />
     <Compile Include="Functions.cs" />
     <Compile Include="MainFrm.cs">
       <SubType>Form</SubType>
